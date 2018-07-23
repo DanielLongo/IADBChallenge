@@ -12,6 +12,7 @@ def read_data(filepath, examples_per_batch=16, train_ratio=.8, eval_ratio=.1, te
 	y = df["Target"]
 	y = pd.get_dummies(y, "Target") #uses one-hot encoding vector
 	df = df.drop(["Id", "Target", "idhogar"], axis=1) 
+	df = normalize_df(df)
 	#TODO: Normalize non binary x columns
 	#steps:
 	#take average of column
@@ -45,6 +46,37 @@ def read_data(filepath, examples_per_batch=16, train_ratio=.8, eval_ratio=.1, te
 
 	return train_x, train_y, eval_x, eval_y, test_x, test_y
 
+def check_feature(array):
+	#returns True if feature should be normalized
+	#returns False if feature is a class
+	num_zeros = (array == 0).sum()
+	num_ones = (array == 1).sum()
+	sum_of_binary_featues = num_ones + num_zeros
+	# print("Sum in check_feature below and then length of array")
+	# print("feature", sum_of_binary_featues)
+	# print("array length", len(array))
+	if (num_ones + num_zeros) == len(array):
+		return False
+	return True
+
+def normalize_array(array):
+	array = array.astype(float) #converts any extraneous strings to floats
+	mean = np.sum(array)/len(array)
+	array = array - mean
+	std = np.std(array)
+	normalized_array = array - std
+	return normalized_array
+
+def normalize_df(df):
+	for feature in df:
+		cur_array = df[feature]
+		if check_feature(cur_array) == True:
+			# print("Normalized feature", feature)
+			df[feature] = normalize_array(cur_array)
+			continue
+		# print("Did not normalized feature", feature)
+	
+	return df
 
 def create_batches(examples, examples_per_batch):
 	#creates batches exclusively
