@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tensorflow.python.framework import ops
 import matplotlib.pyplot as plt
+import time
 
 def create_placeholders():
 	placeholder_x = tf.placeholder(tf.float32, shape=(None, 140))
@@ -96,7 +97,12 @@ train_x, train_y, eval_x, eval_y, test_x, test_y = read_data("./data/train.csv")
 # print("eval_y", pd.isnull(np.asarray(eval_y)).any())
 # print("test_x", pd.isnull(np.asarray(test_x)).any())
 # print("test_y", pd.isnull(np.asarray(test_y)).any())
-sess = train_NN(train_x, train_y, 100, lr=.001)
+start = time.time()
+sess = train_NN(train_x, train_y, 100, lr=.001, show_graph=False)
+print("FINISHED WITH Manual")
+end = time.time()
+print("total time", start - end)
+
 
 
 

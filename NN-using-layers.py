@@ -3,6 +3,7 @@ from ReadData import read_data
 from tensorflow.python.framework import ops
 import matplotlib.pyplot as plt
 import time
+import numpy as np
 
 class NN(object):
 	def __init__(self):
@@ -40,6 +41,7 @@ class NN(object):
 		tf.summary.scalar('Cost', self.avg_cost)
 		self.optimizer = tf.train.AdamOptimizer(self.lr).minimize(self.avg_cost)	
 		self.initializer = tf.global_variables_initializer()
+		self.summary_op = tf.summary.merge_all()
 
 	def load_data(self):
 		self.train_x, self.train_y, self.eval_x, self.eval_y, self.test_x, self.test_y = read_data(self.data_filepath)
@@ -62,10 +64,11 @@ class NN(object):
 					cur_batch_x = self.train_x[b]
 					cur_batch_y = self.train_y[b]
 					cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
-					_, cur_cost, preds, summary = sess.run([self.optimizer, self.avg_cost, self.preds, tf.summary.merge_all()], feed_dict=cur_feed)
+					_, cur_cost, preds, summary = sess.run([self.optimizer, self.avg_cost, self.preds, self.summary_op], feed_dict=cur_feed)
+					# _, cur_cost, preds = sess.run([self.optimizer, self.avg_cost, self.preds], feed_dict=cur_feed)
 				
 					#tensorboard log			
-					self.train_writer.add_summary(summary, self.iter_counter)
+					self.train_writer.add_summary(summary, self.iter_counter) 
 					self.train_writer.flush()
 					self.iter_counter += 1
 
@@ -142,13 +145,15 @@ class NN(object):
 
 
 
-
+start = time.time()
 nn = NN()
 nn.load_data()
-nn.train_NN(20, .000005, show_graph=False)
+nn.train_NN(1000, .0005, show_graph=True)
 print("FInished with A")
-nn.train_NN(15, .000005, show_graph=False)
-print("FInished with B")
-nn.train_NN(10, .000005, show_graph=False)
-print("FInished with C")
-nn.compare_runs()
+end = time.time()
+print("total time", start - end)
+# nn.train_NN(15, .000005, show_graph=False)
+# print("FInished with B")
+# nn.train_NN(10, .000005, show_graph=False)
+# print("FInished with C")
+# nn.compare_runs()
