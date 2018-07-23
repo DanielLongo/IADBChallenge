@@ -2,6 +2,7 @@ import tensorflow as tf
 from ReadData import read_data
 from tensorflow.python.framework import ops
 import matplotlib.pyplot as plt
+import time
 
 class NN(object):
 	def __init__(self):
@@ -9,6 +10,8 @@ class NN(object):
 		self.lr = None
 		self.costs = []
 		self.data_filepath = "./data/train.csv"
+		self.logs_path = "./tensorboard"
+		self.iter_counter = 0 #counts iterations of model for summary writer
 		self.runs = []
 		#each run is a dict {costs:list, train_acc: float, eval_acc:float, lr:float, epochs:int}
 
@@ -34,6 +37,7 @@ class NN(object):
 		self.create_placeholders()
 		self.preds = self.foward_pass(self.placeholder_x)
 		self.avg_cost = self.loss_op(self.preds, self.placeholder_y)
+		tf.summary.scalar('Cost', self.avg_cost)
 		self.optimizer = tf.train.AdamOptimizer(self.lr).minimize(self.avg_cost)	
 		self.initializer = tf.global_variables_initializer()
 
@@ -46,20 +50,29 @@ class NN(object):
 		nn.build_NN()
 		# tf.reset_default_graph()
 		self.costs = []
+		self.iter_counter = 0
 		batch_costs = []
 		with tf.Session() as sess:
 			sess.run(self.initializer)
+
+			summary_filename = "/train-" + str(int(time.time())) + ""
+			self.train_writer = tf.summary.FileWriter(self.logs_path + summary_filename, sess.graph) #creates a summary path for files 
 			for i in range(1, self.epochs + 1):
 				for b in range(len(self.train_x)):
 					cur_batch_x = self.train_x[b]
 					cur_batch_y = self.train_y[b]
 					cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
-					_, cur_cost, preds = sess.run([self.optimizer, self.avg_cost, self.preds], feed_dict=cur_feed)
-
+					_, cur_cost, preds, summary = sess.run([self.optimizer, self.avg_cost, self.preds, tf.summary.merge_all()], feed_dict=cur_feed)
+				
+					#tensorboard log			
+					self.train_writer.add_summary(summary, self.iter_counter)
+					self.train_writer.flush()
+					self.iter_counter += 1
 
 					if (i % 10 == 0) and (b == 1):
 						print("Cost @", i, cur_cost)
 					batch_costs += [cur_cost]
+
 				self.costs += [sum(batch_costs)/len(batch_costs)]
 
 			if show_graph:
@@ -133,6 +146,9 @@ class NN(object):
 nn = NN()
 nn.load_data()
 nn.train_NN(20, .000005, show_graph=False)
+print("FInished with A")
 nn.train_NN(15, .000005, show_graph=False)
+print("FInished with B")
 nn.train_NN(10, .000005, show_graph=False)
+print("FInished with C")
 nn.compare_runs()
