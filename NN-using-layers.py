@@ -1,11 +1,12 @@
 import tensorflow as tf
 from ReadData import read_data
+from ReadData import create_batches
 from tensorflow.python.framework import ops
 import matplotlib.pyplot as plt
 import time
 import numpy as np
 import os
-
+from random import shuffle
 class NN(object):
 	def __init__(self):
 		self.epochs = None
@@ -43,43 +44,43 @@ class NN(object):
 				tf.summary.histogram(x, summary_name)
 
 	def foward_pass(self, x):
-		# a1 = tf.contrib.layers.fully_connected(x, 100)
-		a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1")
+		a1 = tf.contrib.layers.fully_connected(x, 100)
+		# a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1")
 		# self.log_layer("h1")
-		# a2 = tf.contrib.layers.fully_connected(a1, 64)
-		a2 = tf.layers.dense(a1, 64, activation=tf.nn.relu, name="h2")
+		a2 = tf.contrib.layers.fully_connected(a1, 64)
+		# a2 = tf.layers.dense(a1, 64, activation=tf.nn.relu, name="h2")
 		# self.log_layer("h2")
-		# a3 = tf.contrib.layers.fully_connected(a2, 16)
-		a3 = tf.layers.dense(a2, 16, activation=tf.nn.relu, name="h3")
+		a3 = tf.contrib.layers.fully_connected(a2, 16)
+		# a3 = tf.layers.dense(a2, 16, activation=tf.nn.relu, name="h3")
 		# self.log_layer("h3")
-		# a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
-		a4 = tf.layers.dense(a3, 4, activation=tf.nn.sigmoid, name="h4")
+		a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
+		# a4 = tf.layers.dense(a3, 4, activation=tf.nn.sigmoid, name="h4")
 
 		#tensorboard log
-		with tf.variable_scope("h1", reuse=True):
-			weights = tf.get_variable("kernel")
-			biases = tf.get_variable("bias")
-			tf.summary.histogram("w1", weights)
-			tf.summary.histogram("b1", biases)
-			# tf.summary.histogram("a1", a1)		
-		with tf.variable_scope("h2", reuse=True):
-			weights = tf.get_variable("kernel")
-			biases = tf.get_variable("bias")
-			tf.summary.histogram("w2", weights)
-			tf.summary.histogram("b2", biases)
-			# tf.summary.histogram("a2", a2)		
-		with tf.variable_scope("h3", reuse=True):
-			weights = tf.get_variable("kernel")
-			biases = tf.get_variable("bias")
-			tf.summary.histogram("w3", weights)
-			tf.summary.histogram("b3", biases)
-			# tf.summary.histogram("a3", a3)		
-		with tf.variable_scope("h4", reuse=True):
-			weights = tf.get_variable("kernel")
-			biases = tf.get_variable("bias")
-			tf.summary.histogram("w4", weights)
-			tf.summary.histogram("b4", biases)
-			# tf.summary.histogram("a4", a4)		
+		# with tf.variable_scope("h1", reuse=True):
+		# 	weights = tf.get_variable("kernel")
+		# 	biases = tf.get_variable("bias")
+		# 	tf.summary.histogram("w1", weights)
+		# 	tf.summary.histogram("b1", biases)
+		# 	# tf.summary.histogram("a1", a1)		
+		# with tf.variable_scope("h2", reuse=True):
+		# 	weights = tf.get_variable("kernel")
+		# 	biases = tf.get_variable("bias")
+		# 	tf.summary.histogram("w2", weights)
+		# 	tf.summary.histogram("b2", biases)
+		# 	# tf.summary.histogram("a2", a2)		
+		# with tf.variable_scope("h3", reuse=True):
+		# 	weights = tf.get_variable("kernel")
+		# 	biases = tf.get_variable("bias")
+		# 	tf.summary.histogram("w3", weights)
+		# 	tf.summary.histogram("b3", biases)
+		# 	# tf.summary.histogram("a3", a3)		
+		# with tf.variable_scope("h4", reuse=True):
+		# 	weights = tf.get_variable("kernel")
+		# 	biases = tf.get_variable("bias")
+		# 	tf.summary.histogram("w4", weights)
+		# 	tf.summary.histogram("b4", biases)
+		# 	# tf.summary.histogram("a4", a4)		
 
 		return a4
 
@@ -90,7 +91,7 @@ class NN(object):
 		return avg_cost
 
 	def build_NN(self):
-		ops.reset_default_graph()
+		# ops.reset_default_graph()
 		self.create_placeholders()
 		self.preds = self.foward_pass(self.placeholder_x)
 		self.avg_cost = self.loss_op(self.preds, self.placeholder_y)
@@ -110,15 +111,30 @@ class NN(object):
 		self.costs = []
 		self.iter_counter = 0
 		batch_costs = []
+		BATCH_SIZE = 16
+		num_batches = int(self.train_x.shape[0] / BATCH_SIZE) + 1
 		with tf.Session() as sess:
 			sess.run(self.initializer)
-
 			summary_filename = "/train-" + str(int(time.time())) + ""
 			self.train_writer = tf.summary.FileWriter(self.logs_path + summary_filename, sess.graph) #creates a summary path for files 
+			
 			for i in range(1, self.epochs + 1):
-				for b in range(len(self.train_x)):
-					cur_batch_x = self.train_x[b]
-					cur_batch_y = self.train_y[b]
+				# train_batch = list(zip(self.train_x, self.train_y))
+				# shuffle(train_batch)
+				# self.train_x, self.train_y = zip(*train_batch)				
+				item_order = list(range(self.train_x.shape[0]))
+				# shuffle(item_order)
+				# for b in range(len(self.train_x)):
+				for b in range(num_batches):
+					if (b == num_batches - 1) and (b*BATCH_SIZE != self.train_x.shape[0]):
+						item_indexes = item_order[b*BATCH_SIZE:]
+					else:
+						item_indexes = item_order[b*BATCH_SIZE:(b+1)*BATCH_SIZE]
+
+					cur_batch_x = self.train_x[item_indexes]
+					cur_batch_y = self.train_y[item_indexes]
+
+
 					cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
 					_, cur_cost, preds, summary = sess.run([self.optimizer, self.avg_cost, self.preds, self.summary_op], feed_dict=cur_feed)
 					# _, cur_cost, preds = sess.run([self.optimizer, self.avg_cost, self.preds], feed_dict=cur_feed)
@@ -148,11 +164,11 @@ class NN(object):
 			eval_acc = score["avg_eval_acc"]
 			run_log = {"costs": self.costs, "train_acc": train_acc, "eval_acc": eval_acc, "lr" : self.lr, "epochs" : self.epochs}
 			self.runs += [run_log]
-
 			return sess
 
 	def predict(self, x):
 		preds = tf.argmax(se)
+
 	def eval_NN(self):
 		preds = tf.argmax(self.preds, 1)
 		labels = tf.argmax(self.placeholder_y, 1)
@@ -160,18 +176,20 @@ class NN(object):
 		accuracy = tf.reduce_mean(tf.cast(correct, "float"))
 		
 		train_acc = []
-		for b in range(len(self.train_x)):
-			cur_batch_x = self.train_x[b]
-			cur_batch_y = self.train_y[b]
+		batches_x, batches_y = create_batches(self.train_x, self.train_y, 16)
+		for b in range(len(batches_x)):
+			cur_batch_x = batches_x[b]
+			cur_batch_y = batches_y[b]
 			cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
 			cur_train_acc = accuracy.eval(cur_feed)
 			train_acc += [cur_train_acc]
 		avg_train_acc = sum(train_acc)/len(train_acc)
 
 		eval_acc = []
-		for b in range(len(self.eval_x)):
-			cur_batch_x = self.eval_x[b]
-			cur_batch_y = self.eval_y[b]
+		batches_x, batches_y = create_batches(self.eval_x, self.eval_y, 16)
+		for b in range(len(batches_x)):
+			cur_batch_x = batches_x[b]
+			cur_batch_y = batches_y[b]
 			cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
 			cur_eval_acc = accuracy.eval(cur_feed)
 			eval_acc += [cur_eval_acc]
@@ -210,11 +228,11 @@ class NN(object):
 
 nn = NN()
 nn.load_data()
-nn.train_NN(300, .001, show_graph=False)
-print("Finished 1")
-nn.train_NN(300, .01, show_graph=False)
-print("Finished 2")
-nn.train_NN(300, .00025, show_graph=False)
-print("Finished 3")
-nn.compare_runs(show_graph=False)
-print("FInished with All")
+nn.train_NN(100, .001, show_graph=False)
+# print("Finished 1")
+# nn.train_NN(300, .01, show_graph=False)
+# print("Finished 2")
+# nn.train_NN(300, .00025, show_graph=False)
+# print("Finished 3")
+# nn.compare_runs(show_graph=False)
+# print("FInished with All")
