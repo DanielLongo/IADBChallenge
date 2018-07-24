@@ -40,9 +40,16 @@ def read_data(filepath, examples_per_batch=16, train_ratio=.8, eval_ratio=.1, te
 	print("Number of eval examples:", len(eval_x))
 	print("Number of test examples:", len(test_x))
 
-	train_x, train_y = create_batches(train_x, examples_per_batch), create_batches(train_y, examples_per_batch)
-	eval_x, eval_y = create_batches(eval_x, examples_per_batch), create_batches(eval_y, examples_per_batch)
-	test_x, test_y = create_batches(test_x, examples_per_batch), create_batches(test_y, examples_per_batch)
+	# train_x, train_y = create_batches(train_x, examples_per_batch), create_batches(train_y, examples_per_batch)
+	# eval_x, eval_y = create_batches(eval_x, examples_per_batch), create_batches(eval_y, examples_per_batch)
+	# test_x, test_y = create_batches(test_x, examples_per_batch), create_batches(test_y, examples_per_batch)
+
+	train_x = train_x.as_matrix()
+	train_y = train_y.as_matrix()
+	eval_x = eval_x.as_matrix()
+	eval_y = eval_y.as_matrix()
+	test_x = test_x.as_matrix()
+	test_y = test_y.as_matrix()
 
 	return train_x, train_y, eval_x, eval_y, test_x, test_y
 
@@ -78,19 +85,32 @@ def normalize_df(df):
 	
 	return df
 
-def create_batches(examples, examples_per_batch):
+# def create_batches(examples, examples_per_batch):
+# 	#creates batches exclusively
+# 	batches = []
+# 	for i in range(0, len(examples) - examples_per_batch, examples_per_batch):
+# 		start = i
+# 		end = start + examples_per_batch
+# 		batches += [examples[start:end].values]
+
+# 	return batches
+
+def create_batches(x, y, examples_per_batch):
 	#creates batches exclusively
-	batches = []
-	for i in range(0, len(examples) - examples_per_batch, examples_per_batch):
+	batches_x = []
+	batches_y = []
+	for i in range(0, x.shape[0] - examples_per_batch, examples_per_batch):
 		start = i
 		end = start + examples_per_batch
-		batches += [examples[start:end].values]
+		batches_x += [x[start:end]]
+		batches_y += [y[start:end]]
 
-	return batches
+	return batches_x, batches_y
 
 
 
 # train_x, train_y, eval_x, eval_y, test_x, test_y = read_data("./data/train.csv")
+# print(type(train_x), np.shape(train_x))
 
 # print("train_x shape:", np.shape(train_x))
 # print("train_y shape:", np.shape(train_y))
