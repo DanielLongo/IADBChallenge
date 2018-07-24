@@ -4,6 +4,7 @@ from tensorflow.python.framework import ops
 import matplotlib.pyplot as plt
 import time
 import numpy as np
+import os
 
 class NN(object):
 	def __init__(self):
@@ -20,11 +21,66 @@ class NN(object):
 		self.placeholder_x = tf.placeholder(tf.float32, shape=(None, 140))
 		self.placeholder_y = tf.placeholder(tf.float32, shape=(None, 4))
 
+
+	def log_layer(self, layer_name, w=True, b=True, a=False, x=False):
+		#TODO: get w, a and x to work
+
+		layer_number = layer_name[-1]
+		with tf.variable_scope(layer_name, reuse=True):
+			if w:
+				weights = tf.get_variable("kernel")
+				summary_name = "w" + layer_number
+				tf.summary.histogram(summary_name, w)
+			if b:
+				bias  = tf.get_variable("bias")
+				summary_name = "b" + layer_number
+				tf.summary.histogram(summary_name, bias)
+			if a != False:
+				summary_name = "a" + layer_number
+				tf.summary.histogram(a, summary_name)
+			if x != False:
+				summary_name = "x" + layer_number
+				tf.summary.histogram(x, summary_name)
+
 	def foward_pass(self, x):
-		a1 = tf.contrib.layers.fully_connected(x, 100)
-		a2 = tf.contrib.layers.fully_connected(a1, 64)
-		a3 = tf.contrib.layers.fully_connected(a2, 16)
-		a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
+		# a1 = tf.contrib.layers.fully_connected(x, 100)
+		a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1")
+		# self.log_layer("h1")
+		# a2 = tf.contrib.layers.fully_connected(a1, 64)
+		a2 = tf.layers.dense(a1, 64, activation=tf.nn.relu, name="h2")
+		# self.log_layer("h2")
+		# a3 = tf.contrib.layers.fully_connected(a2, 16)
+		a3 = tf.layers.dense(a2, 16, activation=tf.nn.relu, name="h3")
+		# self.log_layer("h3")
+		# a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
+		a4 = tf.layers.dense(a3, 4, activation=tf.nn.sigmoid, name="h4")
+
+		#tensorboard log
+		with tf.variable_scope("h1", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w1", weights)
+			tf.summary.histogram("b1", biases)
+			# tf.summary.histogram("a1", a1)		
+		with tf.variable_scope("h2", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w2", weights)
+			tf.summary.histogram("b2", biases)
+			# tf.summary.histogram("a2", a2)		
+		with tf.variable_scope("h3", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w3", weights)
+			tf.summary.histogram("b3", biases)
+			# tf.summary.histogram("a3", a3)		
+		with tf.variable_scope("h4", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w4", weights)
+			tf.summary.histogram("b4", biases)
+			# tf.summary.histogram("a4", a4)		
+
 		return a4
 
 
@@ -95,6 +151,8 @@ class NN(object):
 
 			return sess
 
+	def predict(self, x):
+		preds = tf.argmax(se)
 	def eval_NN(self):
 		preds = tf.argmax(self.preds, 1)
 		labels = tf.argmax(self.placeholder_y, 1)
@@ -124,7 +182,7 @@ class NN(object):
 
 		return {"avg_train_acc" : avg_train_acc, "avg_eval_acc" : avg_eval_acc}
 
-	def compare_runs(self):
+	def compare_runs(self, show_graph=True):
 		for run in self.runs:
 			costs = run["costs"]
 			train_acc = run["train_acc"]
@@ -132,11 +190,16 @@ class NN(object):
 			lr = run["lr"]
 			epochs = run["epochs"]
 			label = "epochs: " + str(epochs) + ", lr: " + str(lr)
+			print("Run Stats:")
+			print("learning rate:", lr, "Num of Epochs", epochs)
+			print("Train Acc", train_acc, "Eval Acc", eval_acc)
 			self.plot_run(costs, label)
 		plt.xlabel('Epoch')
 		plt.ylabel('Loss')
 		# plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-		plt.show()
+		if show_graph:
+			plt.show()
+
 
 
 	def plot_run(self, costs, label):
@@ -145,15 +208,13 @@ class NN(object):
 
 
 
-start = time.time()
 nn = NN()
 nn.load_data()
-nn.train_NN(1000, .0005, show_graph=True)
-print("FInished with A")
-end = time.time()
-print("total time", start - end)
-# nn.train_NN(15, .000005, show_graph=False)
-# print("FInished with B")
-# nn.train_NN(10, .000005, show_graph=False)
-# print("FInished with C")
-# nn.compare_runs()
+nn.train_NN(300, .001, show_graph=False)
+print("Finished 1")
+nn.train_NN(300, .01, show_graph=False)
+print("Finished 2")
+nn.train_NN(300, .00025, show_graph=False)
+print("Finished 3")
+nn.compare_runs(show_graph=False)
+print("FInished with All")
