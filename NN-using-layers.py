@@ -44,43 +44,43 @@ class NN(object):
 				tf.summary.histogram(x, summary_name)
 
 	def foward_pass(self, x):
-		a1 = tf.contrib.layers.fully_connected(x, 100)
-		# a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1")
+		# a1 = tf.contrib.layers.fully_connected(x, 100)
+		a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1", kernel_initializer=tf.zeros_initializer())
 		# self.log_layer("h1")
-		a2 = tf.contrib.layers.fully_connected(a1, 64)
-		# a2 = tf.layers.dense(a1, 64, activation=tf.nn.relu, name="h2")
+		# a2 = tf.contrib.layers.fully_connected(a1, 64)
+		a2 = tf.layers.dense(a1, 64, activation=tf.nn.relu, name="h2", kernel_initializer=tf.zeros_initializer())
 		# self.log_layer("h2")
-		a3 = tf.contrib.layers.fully_connected(a2, 16)
-		# a3 = tf.layers.dense(a2, 16, activation=tf.nn.relu, name="h3")
+		# a3 = tf.contrib.layers.fully_connected(a2, 16)
+		a3 = tf.layers.dense(a2, 16, activation=tf.nn.relu, name="h3", kernel_initializer=tf.zeros_initializer())
 		# self.log_layer("h3")
-		a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
-		# a4 = tf.layers.dense(a3, 4, activation=tf.nn.sigmoid, name="h4")
+		# a4 = tf.contrib.layers.fully_connected(a3, 4, activation_fn=tf.nn.sigmoid)
+		a4 = tf.layers.dense(a3, 4, activation=tf.nn.sigmoid, name="h4", kernel_initializer=tf.zeros_initializer())
 
-		#tensorboard log
-		# with tf.variable_scope("h1", reuse=True):
-		# 	weights = tf.get_variable("kernel")
-		# 	biases = tf.get_variable("bias")
-		# 	tf.summary.histogram("w1", weights)
-		# 	tf.summary.histogram("b1", biases)
-		# 	# tf.summary.histogram("a1", a1)		
-		# with tf.variable_scope("h2", reuse=True):
-		# 	weights = tf.get_variable("kernel")
-		# 	biases = tf.get_variable("bias")
-		# 	tf.summary.histogram("w2", weights)
-		# 	tf.summary.histogram("b2", biases)
-		# 	# tf.summary.histogram("a2", a2)		
-		# with tf.variable_scope("h3", reuse=True):
-		# 	weights = tf.get_variable("kernel")
-		# 	biases = tf.get_variable("bias")
-		# 	tf.summary.histogram("w3", weights)
-		# 	tf.summary.histogram("b3", biases)
-		# 	# tf.summary.histogram("a3", a3)		
-		# with tf.variable_scope("h4", reuse=True):
-		# 	weights = tf.get_variable("kernel")
-		# 	biases = tf.get_variable("bias")
-		# 	tf.summary.histogram("w4", weights)
-		# 	tf.summary.histogram("b4", biases)
-		# 	# tf.summary.histogram("a4", a4)		
+		# tensorboard log
+		with tf.variable_scope("h1", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w1", weights)
+			tf.summary.histogram("b1", biases)
+			# tf.summary.histogram("a1", a1)		
+		with tf.variable_scope("h2", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w2", weights)
+			tf.summary.histogram("b2", biases)
+			# tf.summary.histogram("a2", a2)		
+		with tf.variable_scope("h3", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w3", weights)
+			tf.summary.histogram("b3", biases)
+			# tf.summary.histogram("a3", a3)		
+		with tf.variable_scope("h4", reuse=True):
+			weights = tf.get_variable("kernel")
+			biases = tf.get_variable("bias")
+			tf.summary.histogram("w4", weights)
+			tf.summary.histogram("b4", biases)
+			# tf.summary.histogram("a4", a4)		
 
 		return a4
 
@@ -229,10 +229,10 @@ class NN(object):
 nn = NN()
 nn.load_data()
 nn.train_NN(100, .001, show_graph=False)
-# print("Finished 1")
-# nn.train_NN(300, .01, show_graph=False)
-# print("Finished 2")
-# nn.train_NN(300, .00025, show_graph=False)
-# print("Finished 3")
+print("Finished 1")
+nn.train_NN(300, .00025, show_graph=False)
+print("Finished 2")
+nn.train_NN(100, .01, show_graph=False)
+print("Finished 3")
 # nn.compare_runs(show_graph=False)
 # print("FInished with All")
