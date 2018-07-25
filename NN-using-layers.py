@@ -91,7 +91,8 @@ class NN(object):
 		return avg_cost
 
 	def build_NN(self):
-		# ops.reset_default_graph()
+		ops.reset_default_graph()
+		tf.reset_default_graph()
 		self.create_placeholders()
 		self.preds = self.foward_pass(self.placeholder_x)
 		self.avg_cost = self.loss_op(self.preds, self.placeholder_y)
@@ -107,7 +108,6 @@ class NN(object):
 		self.epochs = epochs
 		self.lr = lr
 		nn.build_NN()
-		# tf.reset_default_graph()
 		self.costs = []
 		self.iter_counter = 0
 		batch_costs = []
@@ -228,9 +228,9 @@ class NN(object):
 
 nn = NN()
 nn.load_data()
-nn.train_NN(100, .001, show_graph=False)
+nn.train_NN(10, .001, show_graph=False)
 print("Finished 1")
-nn.train_NN(300, .00025, show_graph=False)
+nn.train_NN(10, .00025, show_graph=False)
 print("Finished 2")
 nn.train_NN(100, .01, show_graph=False)
 print("Finished 3")

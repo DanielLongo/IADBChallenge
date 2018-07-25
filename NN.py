@@ -1,5 +1,5 @@
 import tensorflow as tf
-from ReadData import read_data
+from ReadData_debug import read_data
 import numpy as np
 import pandas as pd
 from tensorflow.python.framework import ops
@@ -20,6 +20,14 @@ def create_variables():
 	b3 = tf.get_variable("B3", shape=[16], initializer=tf.zeros_initializer())
 	w4 = tf.get_variable("W4", shape=[16, 4], initializer=tf.zeros_initializer())
 	b4 = tf.get_variable("B4", shape=[4], initializer=tf.zeros_initializer())
+	# w1 = tf.get_variable("W1", shape=[140, 100], initializer=tf.contrib.layers.xavier_initializer())
+	# b1 = tf.get_variable("B1", shape=[100], initializer=tf.contrib.layers.xavier_initializer())
+	# w2 = tf.get_variable("W2", shape=[100, 64], initializer=tf.contrib.layers.xavier_initializer())
+	# b2 = tf.get_variable("B2", shape=[64], initializer=tf.contrib.layers.xavier_initializer())
+	# w3 = tf.get_variable("W3", shape=[64, 16], initializer=tf.contrib.layers.xavier_initializer())
+	# b3 = tf.get_variable("B3", shape=[16], initializer=tf.contrib.layers.xavier_initializer())
+	# w4 = tf.get_variable("W4", shape=[16, 4], initializer=tf.contrib.layers.xavier_initializer())
+	# b4 = tf.get_variable("B4", shape=[4], initializer=tf.contrib.layers.xavier_initializer())	
 
 	params = [[w1,b1], [w2,b2], [w3,b3], [w4,b4]]
 	return params
