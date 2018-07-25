@@ -93,13 +93,19 @@ class NN(object):
 	def build_NN(self):
 		ops.reset_default_graph()
 		tf.reset_default_graph()
+		self.initializer = tf.global_variables_initializer()
+		self.local_initializer = tf.local_variables_initializer()
 		self.create_placeholders()
 		self.preds = self.foward_pass(self.placeholder_x)
 		self.avg_cost = self.loss_op(self.preds, self.placeholder_y)
 		tf.summary.scalar('Cost', self.avg_cost)
 		self.optimizer = tf.train.AdamOptimizer(self.lr).minimize(self.avg_cost)	
-		self.initializer = tf.global_variables_initializer()
+		round_preds = tf.argmax(self.preds, 1)
+		round_lables = tf.argmax(self.placeholder_y, 1)
+		self.precision, _ = tf.metrics.precision(round_lables, round_preds)
+		self.recall, _ = tf.metrics.recall(round_lables, round_preds)
 		self.summary_op = tf.summary.merge_all()
+
 
 	def load_data(self):
 		self.train_x, self.train_y, self.eval_x, self.eval_y, self.test_x, self.test_y = read_data(self.data_filepath)
@@ -114,7 +120,11 @@ class NN(object):
 		BATCH_SIZE = 16
 		num_batches = int(self.train_x.shape[0] / BATCH_SIZE) + 1
 		with tf.Session() as sess:
-			sess.run(self.initializer)
+			# sess.run(self.initializer)
+			sess.run(tf.local_variables_initializer())
+			# tf.global_variables_initializer().run()
+			sess.run(tf.global_variables_initializer())
+			# tf.initialize_all_variables().run()
 			summary_filename = "/train-" + str(int(time.time())) + ""
 			self.train_writer = tf.summary.FileWriter(self.logs_path + summary_filename, sess.graph) #creates a summary path for files 
 			
@@ -149,7 +159,7 @@ class NN(object):
 					batch_costs += [cur_cost]
 
 				self.costs += [sum(batch_costs)/len(batch_costs)]
-
+			print(sess.run(self.precision, cur_feed))
 			if show_graph:
 				y = self.costs
 				x = [i for i in range(len(y))]
@@ -174,29 +184,53 @@ class NN(object):
 		labels = tf.argmax(self.placeholder_y, 1)
 		correct = tf.equal(preds, labels)
 		accuracy = tf.reduce_mean(tf.cast(correct, "float"))
-		
 		train_acc = []
+		train_precision = []
+		train_recall = []
+
 		batches_x, batches_y = create_batches(self.train_x, self.train_y, 16)
 		for b in range(len(batches_x)):
 			cur_batch_x = batches_x[b]
 			cur_batch_y = batches_y[b]
 			cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
+			cur_precision = self.precision.eval(cur_feed)
+			cur_recall = self.recall.eval(cur_feed)
 			cur_train_acc = accuracy.eval(cur_feed)
+
 			train_acc += [cur_train_acc]
+			train_precision += [cur_precision]
+			train_recall += [cur_recall]
+
 		avg_train_acc = sum(train_acc)/len(train_acc)
+		train_precision = sum(train_precision)/len(train_precision)
+		train_recall = sum(train_recall)/len(train_recall)
 
 		eval_acc = []
+		eval_precision = []
+		eval_recall = []
 		batches_x, batches_y = create_batches(self.eval_x, self.eval_y, 16)
 		for b in range(len(batches_x)):
 			cur_batch_x = batches_x[b]
 			cur_batch_y = batches_y[b]
 			cur_feed = {self.placeholder_x : cur_batch_x, self.placeholder_y : cur_batch_y}
 			cur_eval_acc = accuracy.eval(cur_feed)
+			cur_precision = self.precision.eval(cur_feed)
+			cur_recall = self.recall.eval(cur_feed)
+
 			eval_acc += [cur_eval_acc]
+			eval_precision += [cur_precision]
+			eval_recall += [cur_recall]
+
 		avg_eval_acc = sum(eval_acc)/len(eval_acc)
+		avg_eval_precision = sum(eval_precision)/len(eval_precision)
+		avg_eval_recall = sum(eval_recall)/len(eval_recall)
 
 		print("Average train accuracy:", avg_train_acc*100 , "%")
+		print("Train precision / recall", train_precision, "/", train_recall)
+		print("train f1 score", 2 * ((train_precision * train_recall) / (train_precision + train_recall)))
 		print("Average eval accuracy:", avg_eval_acc*100 , "%")
+		print("Train precision / recall", avg_eval_precision, "/", avg_eval_recall)
+		print("train f1 score", 2 * ((avg_eval_precision * avg_eval_recall) / (avg_eval_precision + avg_eval_recall)))
 
 		return {"avg_train_acc" : avg_train_acc, "avg_eval_acc" : avg_eval_acc}
 
@@ -229,10 +263,9 @@ class NN(object):
 nn = NN()
 nn.load_data()
 nn.train_NN(10, .001, show_graph=False)
-print("Finished 1")
-nn.train_NN(10, .00025, show_graph=False)
-print("Finished 2")
-nn.train_NN(100, .01, show_graph=False)
-print("Finished 3")
-# nn.compare_runs(show_graph=False)
+# nn.train_NN(10, .00025, show_graph=False)
+# print("Finished 2")
+# nn.train_NN(100, .01, show_graph=False)
+# print("Finished 3")
+# # nn.compare_runs(show_graph=False)
 # print("FInished with All")
