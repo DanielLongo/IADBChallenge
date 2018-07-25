@@ -57,7 +57,6 @@ def train_NN(train_x, train_y, epoch, lr=.01, show_graph=True):
 	preds = foward_pass(placeholder_x, params)
 	avg_cost = loss_op(preds, placeholder_y)
 	optimizer = tf.train.AdamOptimizer(lr).minimize(avg_cost)
-	
 	initialize = tf.global_variables_initializer()
 
 	costs = []
