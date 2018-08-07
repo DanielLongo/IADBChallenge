@@ -18,6 +18,11 @@ class NN(object):
 		self.placeholder_x = tf.placeholder(tf.float32, shape=(None, 140))
 		self.placeholder_y = tf.placeholder(tf.float32, shape=(None, 4))
 
+#POSSIBLE FIXES TO GRADS
+#print out weights
+#print out gradients
+#recheck ones 
+
 	def foward_pass(self, x):
 		# a1 = tf.contrib.layers.fully_connected(x, 100)
 		a1 = tf.layers.dense(x, 100, activation=tf.nn.relu, name="h1", kernel_initializer=tf.zeros_initializer())
@@ -82,7 +87,8 @@ class NN(object):
 			self.true_preds = tf.argmax(self.preds, 1)
 			self.true_labels = tf.argmax(self.placeholder_y, 1)
 			self.correct = tf.equal(self.true_preds, self.true_labels)
-			self.accuracy = tf.reduce_mean(tf.cast(self.correct, "float"))
+			# self.accuracy = tf.reduce_mean(tf.cast(self.correct, "float"))
+			self.accuracy, _ = tf.metrics.accuracy(self.true_labels, self.true_preds)
 			self.precision, _ = tf.metrics.precision(self.true_labels, self.true_preds)
 			self.recall, _ = tf.metrics.recall(self.true_labels, self.true_preds)
 
@@ -97,11 +103,10 @@ class NN(object):
 		self.graph = tf.Graph()
 		nn.build_NN(lr)
 		with tf.Session(graph=self.graph) as sess:
-			# sess.run(self.initializer)
-			sess.run(tf.local_variables_initializer())
-			# tf.global_variables_initializer().run()
-			sess.run(tf.global_variables_initializer())
-			# tf.initialize_all_variables().run()
+			sess.run(self.initializer)
+			sess.run(self.local_initializer)
+			# sess.run(tf.local_variables_initializer())
+			# sess.run(tf.global_variables_initializer())
 			summary_filename = "/train-" + str(int(time.time())) + ""
 			self.train_writer = tf.summary.FileWriter(self.logs_path + summary_filename, sess.graph) #creates a summary path for files 
 			
